@@ -1,66 +1,70 @@
-# Malicious MCP Server Example
+# Example MCP Server with FastMCP (Python)
 
 ## Overview
 
-This educational example demonstrates a critical security risk in Model Context Protocol (MCP) servers: the ability to execute system commands without the user or AI assistant being aware. The example is intentionally designed to highlight how dangerous this can be, especially for servers using the **stdio** transport.
+This repository provides an educational example of a Model Context Protocol (MCP) server implemented in Python using the [FastMCP](https://github.com/modelcontextprotocol/fastmcp) library. It demonstrates how to expose tools, resources, and prompts to AI clients, enabling seamless integration with applications like IDEs, chatbots, and agent frameworks.
+
 
 ## What is MCP?
 
-Model Context Protocol (MCP) is an open protocol that connects AI applications (like IDEs, chatbots, or agents) to external tools and data sources. MCP servers expose **tools** (executable functions), **resources** (data), and **prompts** (templates) to AI clients. The protocol is designed for composability, security, and user control, but improper server implementations can introduce severe risks.
+Model Context Protocol (MCP) is an open protocol that standardizes how AI applications connect to external tools and data sources. MCP servers expose:
+
+- **Tools:** Executable functions that can be called by AI clients
+- **Resources:** Data sources for context (files, APIs, etc.)
+- **Prompts:** Reusable templates for interactions
 
 Learn more: [modelcontextprotocol.io](https://modelcontextprotocol.io/)
 
-## Why is this dangerous?
 
-- **Tool execution is model-controlled:** AI models can discover and invoke tools automatically. If a tool executes a system command (e.g., `rm -rf /`), it can do so without explicit user knowledge unless the client enforces confirmation dialogs.
-- **Stdio transport risk:** When using stdio, the MCP server runs as a subprocess on the user's machine. Any tool exposed by the server can execute arbitrary code locally, potentially compromising the system.
-- **Lack of visibility:** If the server is malicious or poorly designed, neither the user nor the AI assistant may realize a dangerous command is being run.
+## Why FastMCP?
+
+[FastMCP](https://github.com/modelcontextprotocol/fastmcp) is a Python library for building MCP servers quickly and easily. It provides:
+
+- Simple API for defining tools, resources, and prompts
+- Support for stdio and HTTP transports
+- Type-safe schemas for tool inputs/outputs
+- Integration with popular Python frameworks
+
 
 ## How does MCP work?
 
 MCP uses a client-server architecture:
 
 - **Host:** The AI application (e.g., VS Code, Claude Desktop)
-- **Client:** Connects to one MCP server
-- **Server:** Exposes tools/resources/prompts
+- **Client:** Connects to one or more MCP servers
+- **Server:** Exposes tools, resources, and prompts
 
-Servers declare their capabilities during initialization. Tools are listed and can be invoked by the client or model. For stdio servers, the client launches the server as a subprocess and exchanges JSON-RPC messages over stdin/stdout.
+Servers declare their capabilities during initialization. Tools are listed and can be invoked by the client or model. FastMCP makes it easy to implement these features in Python.
 
-## Security Risks
 
-- **Arbitrary code execution:** Malicious or buggy servers can expose tools that run dangerous commands.
-- **No user confirmation:** If the client does not enforce confirmation dialogs, tools may be executed without user consent.
-- **Session hijacking:** Attackers may hijack sessions or inject malicious payloads if session IDs are predictable or not bound to user identity.
-- **Token passthrough (for HTTP servers):** Accepting tokens not intended for the server can lead to privilege escalation and confused deputy attacks.
+## Example Features
 
-## Best Practices
+- Define Python functions as MCP tools
+- Expose resources (e.g., files, API data)
+- Add prompts for structured interactions
+- Support for both stdio and HTTP transports
 
-**For MCP server authors:**
-- Never expose tools that execute system commands unless absolutely necessary.
-- Always validate tool inputs and sanitize outputs.
-- Use logging libraries that write to stderr (never stdout for stdio servers).
-- Implement proper access controls and rate limiting.
 
-**For MCP client authors:**
-- Always show confirmation dialogs before executing any tool, especially those that run system commands.
-- Clearly display which server and tool is being invoked.
-- Log all tool executions for audit purposes.
-- Validate tool results before passing to the AI model.
+## Usage
 
-**For users:**
-- Only connect to trusted MCP servers.
-- Review the list of available tools before enabling a server.
-- Be cautious with stdio servers, as they run locally and have direct access to your system.
+1. Install FastMCP:
+	```bash
+	pip install fastmcp
+	```
+2. Run the example server:
+	```bash
+	python mcp_server.py
+	```
+3. Connect an MCP-compatible client (e.g., Claude Desktop, VS Code, etc.) to the server.
 
-## Educational Purpose
+See `mcp_server.py` for example code.
 
-This repository is for educational and demonstration purposes only. Do **not** use this code in production or connect it to real AI assistants without understanding the risks.
 
 ## References
 
 - [MCP Specification](https://modelcontextprotocol.io/specification/2025-06-18/index)
-- [Security Best Practices](https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices)
+- [FastMCP Python Library](https://github.com/modelcontextprotocol/fastmcp)
 - [Example Servers](https://modelcontextprotocol.io/examples)
 
 ---
-**Warning:** MCP servers can be extremely powerful. Always review server code and tool definitions before connecting to any AI application.
+**Note:** This example is for educational purposes. Always review server code and tool definitions before connecting to any AI application.
